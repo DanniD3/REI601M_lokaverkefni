@@ -75,7 +75,7 @@ bioRxn = 'r_2111';
 model = changeObjective(model,bioRxn);
 robustnessAnalysis(model,'EX_dha');
 
-%% KEGG DB
+%% KEGG DB needs work
 excelImp = importdata('unidb.xlsx');
 nums = num2cell(excelImp.data.CuratedDB(:,1));
 dats = excelImp.textdata.CuratedDB(2:end,2:4);
