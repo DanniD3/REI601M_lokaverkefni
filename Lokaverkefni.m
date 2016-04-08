@@ -84,3 +84,15 @@ KEGGDB = [nums dats];
 %% Using Ecoli for probPathwayConstruction
 model = readCbModel('ecoli_core_model.xml');
 keggList = [model.mets model.metKEGGID];
+
+[EcNum EcText EcRaw] = xlsread('ecoli_core_model.xls','metabolites');
+KEGGIDs = EcText(2:end,8);
+
+%This list is correct, 99% sure (checked first and last)
+[model.mets KEGGIDs]
+
+%adding KeggID to model
+for i = 1:length(KEGGIDs)
+    model.metKEGGID{i} = KEGGIDs{i};
+end
+
