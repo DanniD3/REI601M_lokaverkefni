@@ -1,6 +1,6 @@
 addpath('c:/cobra')
 initCobraToolbox
-%% Extract model
+%% Extract model (of yeast_7.00.dat is not present)
 model = readCbModel('yeast_7.00_cobra.xml');
 writeCbModel(model,'text','yeast_7.00.txt');
 save('yeast_7.00.dat','-struct','model');
