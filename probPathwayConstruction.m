@@ -4,7 +4,10 @@ function model = probPathwayConstruction( targetMet, model, KEGGDB )
 %   using probabilistic selection scheme
     orgModel = model;
     model = constructPath(targetMet, model, KEGGDB, 0);
+    model = addReaction(model,strcat('EX_',targetMet),targetMet);
+    model = changeObjective(model,strcat('EX_',targetMet));
     sol = optimizeCbModel(model);
+    disp(sol);
     native = 0; % native does not produce targetMet
     if sol.f < native
         model = orgModel;
