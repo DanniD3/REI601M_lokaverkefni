@@ -97,4 +97,11 @@ for i = 1:length(KEGGIDs)
 end
 
 %% UTIL: using KEGGDB
+metNames = KEGGDB(:,4);
+oleateIndex = [];
+for i = 1:length(metNames)
+    if strfind('oleate',metNames(i)) ~= []
+        oleateIndex = [oleateIndex i]
+    end
+end
 

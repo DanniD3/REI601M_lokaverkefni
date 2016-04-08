@@ -30,8 +30,8 @@ function model = constructPath( met, model, chainLength )
         end
     end
     
-    rSelected = picks(random);
     %Add the randomly selected reaction to pathway
+    rSelected = picks(randi(picks));
     model = addReaction(rSelected);
     
     % Get all reactants of rSelected
