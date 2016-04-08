@@ -96,12 +96,13 @@ for i = 1:length(KEGGIDs)
     model.metKEGGID{i} = KEGGIDs{i};
 end
 
-%% UTIL: using KEGGDB
+%% UTIL: Search for met in KEGGDB
 metNames = KEGGDB(:,4);
 oleateIndex = [];
 for i = 1:length(metNames)
-    if strfind('oleate',metNames(i)) ~= []
-        oleateIndex = [oleateIndex i]
+    metName = metNames(i);
+    if ~isempty(strfind(metName{1},'Oleate'))
+        oleateIndex = [oleateIndex i];
     end
 end
-
+disp(oleateIndex);
