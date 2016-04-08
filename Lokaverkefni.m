@@ -97,12 +97,14 @@ for i = 1:length(KEGGIDs)
 end
 
 %% UTIL: Search for met in KEGGDB
-metNames = KEGGDB(:,4);
-oleateIndex = [];
-for i = 1:length(metNames)
-    metName = metNames(i);
+oleateRxn = {};
+for i = 1:length(KEGGDB(:,4))
+    metName = KEGGDB(i,4);
     if ~isempty(strfind(metName{1},'Oleate'))
-        oleateIndex = [oleateIndex i];
+        oleateRxn = [oleateRxn;KEGGDB(i,:)];
     end
 end
-disp(oleateIndex);
+disp(oleateRxn);
+
+%%
+model = probPathwayConstruction('Oleate', model, KEGGDB);
