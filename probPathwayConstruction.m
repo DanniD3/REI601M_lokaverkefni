@@ -1,41 +1,46 @@
-function pathway = probPathwayConstruction( targetMet, selectionScheme, pathway )
-%probPathwayConstruction( targetMet, selectionScheme )
+function model = probPathwayConstruction( targetMet, model )
+%probPathwayConstruction( targetMet, pathway )
 %   Constructs the additional pathway of producing target metabolite
 %   using probabilistic selection scheme
-
-    pathway = constructPath(targetMet, selectionScheme, pathway);
-    
-    % RUN Flux Balance Analysis on pathway (sol.x)
+    orgModel = model;
+    model = constructPath(targetMet, model, 0);
     sol = optimizeCbModel(model);
-    
-    if sol.f < sol(pathway).f
-        pathway = [];
+    native = 0; % native does not produce targetMet
+    if sol.f < native
+        model = orgModel;
     end
 end
 
-function pathway = constructPath( met,  selectionScheme, pathway )
-    if length(pathway) < limit
-        pathway = [];
+function model = constructPath( met, model, chainLength )
+    limit = 6;
+    % return unmodified model if exceeded allowed chain length
+    if chainLength > limit
         return
     end
-    
-    % KEGG database
-    for i = 1:KEGG(met)
-        if i == pathway
-            rWeighting = 0;
-        else
-            %rWeighting = (based on) selectionScheme;
+
+    % Grab all reactions from KEGG that has met
+    reactions = KEGG(met);
+    % Foreach reaction, if exist ignore, else add to set of reactions
+    picks = [];
+    for i = 1:length(reactions)
+        % if reaction i is not in model
+        if reactions(i) == model
+            % add reaction i to model
         end
     end
     
-    %Randomly select a reaction based on rWeighting
-    %Add the selected reaction to pathway
-    %for %m = 1:SelectedReaction
-        %if m == pathway
-            %continue
-        %else
-            constructPath(m,selectionScheme,pathway)
-        %end
-    %end
+    rSelected = picks(random);
+    %Add the randomly selected reaction to pathway
+    model = addReaction(rSelected);
+    
+    % Get all reactants of rSelected
+    reactants = [];
+    for m = 1:length(reactants)
+        if strmatch(reactants(m), model.mets) ~= cellstr()
+            continue
+        else
+            constructPath(m,model,chainLength+1)
+        end
+    end
 end
 
