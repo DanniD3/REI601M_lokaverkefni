@@ -1,7 +1,7 @@
 from xml.dom.minidom import parse
 import json
 
-file = open("yeast_7.00.xml")
+file = open("iJO1366.xml")
 xml_dom = parse(file)
 
 species = xml_dom.getElementsByTagName("species")
