@@ -26,6 +26,7 @@ function model = constructPath( met, model, chainLength )
         % if reaction i is not in model
         if reactions(i) == model
             % add reaction i to model
+            picks = [picks reactions(i)];
         end
     end
     
