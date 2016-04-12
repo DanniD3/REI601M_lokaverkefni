@@ -75,6 +75,16 @@ bioRxn = 'r_2111';
 model = changeObjective(model,bioRxn);
 robustnessAnalysis(model,'EX_dha');
 
+%% UTIL: Search for met in KEGGDB
+oleateRxn = {};
+for i = 1:length(KEGGDB(:,4))
+    metName = KEGGDB(i,4);
+    if ~isempty(strfind(metName{1},'Oleate'))
+        oleateRxn = [oleateRxn;KEGGDB(i,:)];
+    end
+end
+disp(oleateRxn);
+
 %% KEGG DB needs work
 excelImp = importdata('unidb.xlsx');
 nums = num2cell(excelImp.data.CuratedDB(:,1));
@@ -93,18 +103,9 @@ mets = [model.mets KEGGIDs];
 
 %adding KeggID to model
 for i = 1:length(KEGGIDs)
-    model.metKEGGID{i} = KEGGIDs{i};
+    model.mets{i} = KEGGIDs{i};
 end
 
-%% UTIL: Search for met in KEGGDB
-oleateRxn = {};
-for i = 1:length(KEGGDB(:,4))
-    metName = KEGGDB(i,4);
-    if ~isempty(strfind(metName{1},'Oleate'))
-        oleateRxn = [oleateRxn;KEGGDB(i,:)];
-    end
-end
-disp(oleateRxn);
-
-%%
-model = probPathwayConstruction('Oleate', model, KEGGDB);
+%Oleate ID:
+oleateKEGG = 'C00712';
+model = probPathwayConstruction(oleateKEGG, model, KEGGDB);

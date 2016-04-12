@@ -22,7 +22,7 @@ function model = constructPath( met, model, KEGGDB, chainLength )
     end
 
     % Grab all reactions from KEGG that has met
-    reactions = searchRxnWithMet(met,KEGGDB);
+    reactions = searchRxnWithKeggID(met,KEGGDB);
     % Foreach reaction, if exist ignore, else add to set of reactions
     picks = [];
     
@@ -55,19 +55,20 @@ function model = constructPath( met, model, KEGGDB, chainLength )
             end
         end
     else
-        % Case only 1 rxn from KEGG
-        rxn = reactions(2);
-        match = strmatch(rxn{1},model.rxns);
-        if isempty(match)
-            % add the reaction to model
-            rxnName = reactions(2);
-            rxnFormula = reactions(3);
-            model = addReaction(model, rxnName{1}, rxnFormula{1});
+        % Case at most 1 rxn from KEGG
+        if isempty(reactions)
+            return
         end
         
+        % add the reaction to model
+        rxnName = reactions(2);
+        rxnFormula = reactions(3);
+        [model,rxnIDexists] = addReaction(model, rxnName{1}, rxnFormula{1});
+        disp(rxnFormula);
         % Get all reactants of rSelected
-        reactants = getReactants(reactions(3));
+        reactants = getReactants(reactions(3), met);
         for m = 1:length(reactants)
+            % NEED TO CHECK IF REACTANTS ARE PRODUCED IN S
             if ~isempty(strmatch(reactants(m), model.mets))
                 continue
             else
@@ -77,24 +78,42 @@ function model = constructPath( met, model, KEGGDB, chainLength )
     end
 end
 
-function rxns = searchRxnWithMet( met, KEGGDB )
+function rxns = searchRxnWithKeggID( mets, KEGGDB )
     rxns = [];
-    for i = 1:length(KEGGDB(:,4))
-        metName = KEGGDB(i,4);
-        if ~isempty(strfind(metName{1},met))
+    for i = 1:length(KEGGDB(:,3))
+        metName = KEGGDB(i,3);
+        if ~isempty(strfind(metName{1},mets))
             rxns = [rxns KEGGDB(i,:)];
         end
     end
 end
 
-function reactants = getReactants( reactionFormula )
+function reactants = getReactants( reactionFormula, met )
     C = strsplit(reactionFormula{1},{' ','+'},'CollapseDelimiters',true);
     reactants = [];
+    products = [];
+    side = 0;
+    targetSide = 0;
     for i = 1:length(C)
+        % switch side when <=>
         if strcmp(C(i),'<=>')
-           return
+           side = 1;
         else
-            reactants = [reactants C(i)];
+            % add metabolite to correct side
+            if ~side
+                reactants = [reactants C(i)];
+            else
+                products = [products C(i)];
+            end
+            % set targetSide when target is found
+            if strcmp(C(i),met)
+                targetSide = side;
+            end
         end
+    end
+    
+    % return products if target is on RHS
+    if ~targetSide
+        reactants = products;
     end
 end
