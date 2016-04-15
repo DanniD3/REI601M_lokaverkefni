@@ -106,6 +106,9 @@ for i = 1:length(KEGGIDs)
     model.mets{i} = KEGGIDs{i};
 end
 
+%% Running probPathwayConstruction
 %Oleate ID:
 oleateKEGG = 'C00712';
-model = probPathwayConstruction(oleateKEGG, model, KEGGDB);
+succKEGG = 'C00042';
+hKEGG = 'C00001';
+model = probPathwayConstruction(succKEGG, model, KEGGDB);

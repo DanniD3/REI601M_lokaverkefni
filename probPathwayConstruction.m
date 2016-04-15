@@ -2,77 +2,103 @@ function model = probPathwayConstruction( targetMet, model, KEGGDB )
 %probPathwayConstruction( targetMet, pathway )
 %   Constructs the additional pathway of producing target metabolite
 %   using probabilistic selection scheme
-    orgModel = model;
-    model = constructPath(targetMet, model, KEGGDB, 0);
+    
     model = addReaction(model,strcat('EX_',targetMet),targetMet);
     model = changeObjective(model,strcat('EX_',targetMet));
+    orgModel = model;
+    
+    native = 0; % check if targetMet is native
+    if ~isempty(strmatch(targetMet,model.mets))
+        sol = optimizeCbModel(model);
+        native = sol.f;
+    end
+    
+    model = constructPath(targetMet, model, KEGGDB, 0);
     sol = optimizeCbModel(model);
-    disp(sol);
-    native = 0; % native does not produce targetMet
-    if sol.f < native
+    disp(strcat('Native :', num2str(native), ' Pathway :', num2str(sol.f)));
+    
+    if sol.f <= native
         model = orgModel;
+        disp('Original model is better');
     end
 end
 
 function model = constructPath( met, model, KEGGDB, chainLength )
     limit = 6;
+    disp(strcat(num2str(chainLength),'. reaction adding'));
     % return unmodified model if exceeded allowed chain length
     if chainLength > limit
-        return
+        disp('Reaction Limit REACHED!!');
+        return;
     end
 
     % Grab all reactions from KEGG that has met
     reactions = searchRxnWithKeggID(met,KEGGDB);
-    % Foreach reaction, if exist ignore, else add to set of reactions
-    picks = [];
     
     % Size difference for 1 rxn or multiple rxns
     rSize = size(reactions);
+    disp(strcat('Adding reaction for :', met));
+    disp(strcat('Found :', num2str(rSize(1)), ' reactions for :', met));
+    disp('');
+    
     if rSize(1) > 1
         % Case multiple rxns from KEGG
-        %   This is incompletely since only 1 rxn was found
-        for i = 1:length(reactions)
-            % if reaction i is not in model
-            reaction = reactions(i);
-            rxn = reaction(2);
-            match = strmatch(rxn{1},model.rxns);
-            if ~isempty(match)
-                % add reaction i to model
-                picks = [picks reactions(i)];
+        
+        % Add the randomly selected reaction to pathway
+        rAdded = 0;
+        while ~rAdded
+            rLength = size(reactions);
+            % Check if reactions exist
+            if isempty(reactions)
+                throw(MException('NoReactionAvailable','No reaction has been found for the metabolite'));
+            end
+            i = randi(rLength(1));
+            reaction = reactions(i,:);
+            rxnName = reaction(2);
+            rxnFormula = reaction(3);
+            [model,rxnIDexists] = addReaction(model, rxnName{1}, rxnFormula{1});
+            if isempty(rxnIDexists)
+                % Added a rection if rxnID did not exist
+                rAdded = 1;
+            else
+                % Remove existing reaction from the list of selectable
+                % reaction
+                reactions(i,:) = [];
             end
         end
-        %Add the randomly selected reaction to pathway
-        rSelected = picks(randi(length(picks)));
-        model = addReaction(model, rSelected(2), rSelected(3));
+        disp(rxnFormula);
         
         % Get all reactants of rSelected
-        reactants = [];
+        reactants = getReactants(reaction(3), met);
         for m = 1:length(reactants)
-            if strmatch(reactants(m), model.mets) ~= cellstr()
+            if checkProduction(model,reactants(m))
                 continue
             else
-                constructPath(m,model,KEGGDB,chainLength+1)
+                r = reactants(m);
+                constructPath(r{1},model,KEGGDB,chainLength+1);
             end
         end
     else
         % Case at most 1 rxn from KEGG
         if isempty(reactions)
-            return
+            throw(MException('NoReactionAvailable','No reaction has been found for the metabolite'));
         end
         
         % add the reaction to model
         rxnName = reactions(2);
         rxnFormula = reactions(3);
         [model,rxnIDexists] = addReaction(model, rxnName{1}, rxnFormula{1});
-        disp(rxnFormula);
+        %disp(rxnFormula);
+        
         % Get all reactants of rSelected
         reactants = getReactants(reactions(3), met);
+        disp(reactants);
         for m = 1:length(reactants)
-            % NEED TO CHECK IF REACTANTS ARE PRODUCED IN S
-            if ~isempty(strmatch(reactants(m), model.mets))
+            if checkProduction(model,reactants(m))
                 continue
             else
-                constructPath(m,model,KEGGDB,chainLength+1)
+                r = reactants(m);
+                constructPath(r{1},model,KEGGDB,chainLength+1);
             end
         end
     end
@@ -83,9 +109,10 @@ function rxns = searchRxnWithKeggID( mets, KEGGDB )
     for i = 1:length(KEGGDB(:,3))
         metName = KEGGDB(i,3);
         if ~isempty(strfind(metName{1},mets))
-            rxns = [rxns KEGGDB(i,:)];
+            rxns = [rxns;KEGGDB(i,:)];
         end
     end
+%     rxns = [rxns;KEGGDB(231,:)]; % SUCC GOLDEN APPLE
 end
 
 function reactants = getReactants( reactionFormula, met )
@@ -116,4 +143,25 @@ function reactants = getReactants( reactionFormula, met )
     if ~targetSide
         reactants = products;
     end
+    
+    % check reactants are not multipliers
+    for i = length(reactants):1:-1
+        r = reactants(i);
+        rStr = r{1};
+        if ~strcmp(rStr(1),'C')
+            reactants(i) = [];
+        end
+    end
 end
+
+function isProduced = checkProduction( model, reactant )
+    isProduced = 0;
+    productions = full(model.S(strmatch(reactant,model.mets),:));
+    for i = 1:length(productions)
+        if productions(i) > 0
+            isProduced = 1;
+            break;
+        end
+    end
+end
+
