@@ -75,6 +75,21 @@ bioRxn = 'r_2111';
 model = changeObjective(model,bioRxn);
 robustnessAnalysis(model,'EX_dha');
 
+%% Adding KEGGID to yeast model
+fname = 'yeast_to_kegg.json';
+fid = fopen(fname);
+raw = fread(fid,inf);
+str = char(raw');
+fclose(fid);
+
+keggData = JSON.parse(str);
+fields = fieldnames(keggData);
+for i = 1:length(fields)
+    field = fields(i);
+    model.mets(strmatch(field{1},model.mets)) = cellstr(keggData.(field{1}));
+    model.rxns(strmatch(field{1},model.rxns)) = cellstr(keggData.(field{1}));
+end
+
 %% UTIL: Search for met in KEGGDB
 oleateRxn = {};
 for i = 1:length(KEGGDB(:,4))
@@ -107,8 +122,9 @@ for i = 1:length(KEGGIDs)
 end
 
 %% Running probPathwayConstruction
-%Oleate ID:
+%KEGG IDs:
 oleateKEGG = 'C00712';
 succKEGG = 'C00042';
 hKEGG = 'C00001';
-model = probPathwayConstruction(succKEGG, model, KEGGDB);
+%dhaKEGG = 'C06429';
+model = probPathwayConstruction(oleateKEGG, model, KEGGDB);
