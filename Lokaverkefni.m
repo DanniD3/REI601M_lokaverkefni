@@ -1,5 +1,5 @@
-addpath('c:/cobra')
-initCobraToolbox
+addpath('c:/cobra');
+initCobraToolbox;
 %% Extract model (of yeast_7.00.dat is not present)
 model = readCbModel('yeast_7.00_cobra.xml');
 writeCbModel(model,'text','yeast_7.00.txt');
@@ -42,11 +42,6 @@ model = addReaction(model,'c18e',{'STA',malonyl_coa,'ETA',co2,coa}, [-1 -1 1 1 1
 model = addMetabolite(model,'EPA','eicosapentaenoic acid');
 model = addReaction(model,'d5d',{'ETA',o2,'EPA',h2o}, [-1 -1 1 2],false);
 
-%% Add EX for linoleic acid
-model = addReaction(model,'EX_la','LA');
-model = changeObjective(model,'EX_la');
-sol = optimizeCbModel(model,'max');
-disp(sol);
 %% Add EX for eicosapentaenoic acid
 model = addReaction(model,'EX_epa','EPA');
 model = changeObjective(model,'EX_epa');
@@ -130,25 +125,30 @@ hKEGG = 'C00001';
 %dhaKEGG = 'C06429';
 model = probPathwayConstruction(oleateKEGG, model, KEGGDB);
 
-
 %% BOTTLENECK CHECKS
 
-%load Ecoli_core_model
-targetRxn='EX_dha';
+% Add EX for oleic acid
+model = addReaction(model,'EX_oa',oleate);
+model = changeObjective(model,'EX_oa');
+sol = optimizeCbModel(model,'max');
+disp(sol);
 
-npoints = 1000;  % Stærð slembiúrtaks (fjöldi flæðisvigra, 5000 er betra)
+%load Ecoli_core_model
+targetRxn='EX_oa';
+
+npoints = 1000;  % Stær?slembiúrtaks (fjöldi flæðisvigra, 5000 er betra)
 nsec = 120;      % 1800 fyrir minni genome-scale líkön, 4800 fyrir stærri líkön
 [s,mixedFraction] = gpSampler(model, npoints, [], nsec);
 
-% mixedFraction gefur til kynna hversu góð nálgun fékkst, gildið er á bilinu 0 til 1.
-% Æskilegt er að fá gildi nálægt 0.5, ef það er t.d. 0.75 eða hærra þarf að hækka 'nsec'.
+% mixedFraction gefur til kynna hversu góð nálgun fékkst, gildi?er ?bilinu 0 til 1.
+% Æskilegt er a?f?gildi nálægt 0.5, ef þa?er t.d. 0.75 eða hærra þarf a?hækka 'nsec'.
 fprintf('Mixed fraction=%1.2f\n', mixedFraction)
 
 
-% Skoða dreifingu flæðisgilda fyrir PGI hvarfið í glýkólýsu
-% Sjá líka plotSampleHist í COBRA
+% Skoða dreifingu flæðisgilda fyrir PGI hvarfi??glýkólýsu
+% Sj?líka plotSampleHist ?COBRA
 nbins=25;
-hist(s.points(findRxnIDs(model,'d4d'),:), nbins) % Sjáum að hvarfið gengur í báðar áttir, meiri líkur á að það gangi til hægri
+hist(s.points(findRxnIDs(model,'d4d'),:), nbins) % Sjáum a?hvarfi?gengur ?báðar áttir, meiri líkur ?a?þa?gangi til hægri
 
 % Ákvarða fylgnistuðla
 R=corrcoef(s.points');
