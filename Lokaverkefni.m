@@ -64,6 +64,7 @@ model = addReaction(model,'d4d',{'DPA',o2,'DHA',h2o}, [-1 -1 1 2],false);
 model = addReaction(model,'EX_dha','DHA');
 model = changeObjective(model,'EX_dha');
 sol = optimizeCbModel(model,'max');
+disp(sol);
 
 %% Robustness Analysis
 bioRxn = 'r_2111';
@@ -124,6 +125,16 @@ succKEGG = 'C00042';
 hKEGG = 'C00001';
 %dhaKEGG = 'C06429';
 model = probPathwayConstruction(oleateKEGG, model, KEGGDB);
+
+%% Finding oleate producing reactions
+oleateS = model.S(strmatch(oleate, model.mets),:);
+oleateRxnIs = [];
+for i = 1:length(oleateS)
+    if oleateS(i) > 0
+        oleateRxnIs = [oleateRxnIs i];
+    end
+end
+oleateRxns = model.rxns(oleateRxnIs);
 
 %% BOTTLENECK CHECKS
 
