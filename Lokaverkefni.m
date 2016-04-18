@@ -76,6 +76,7 @@ model = changeObjective(model,bioRxn);
 robustnessAnalysis(model,'EX_dha');
 
 %% Adding KEGGID to yeast model
+addpath('c:/jsonparser') % http://www.mathworks.com/matlabcentral/fileexchange/42236-parse-json-text/content/example/html/usage.html
 fname = 'yeast_to_kegg.json';
 fid = fopen(fname);
 raw = fread(fid,inf);
@@ -128,3 +129,32 @@ succKEGG = 'C00042';
 hKEGG = 'C00001';
 %dhaKEGG = 'C06429';
 model = probPathwayConstruction(oleateKEGG, model, KEGGDB);
+
+
+%% BOTTLENECK CHECKS
+
+%load Ecoli_core_model
+targetRxn='EX_dha';
+
+npoints = 1000;  % Stærð slembiúrtaks (fjöldi flæðisvigra, 5000 er betra)
+nsec = 120;      % 1800 fyrir minni genome-scale líkön, 4800 fyrir stærri líkön
+[s,mixedFraction] = gpSampler(model, npoints, [], nsec);
+
+% mixedFraction gefur til kynna hversu góð nálgun fékkst, gildið er á bilinu 0 til 1.
+% Æskilegt er að fá gildi nálægt 0.5, ef það er t.d. 0.75 eða hærra þarf að hækka 'nsec'.
+fprintf('Mixed fraction=%1.2f\n', mixedFraction)
+
+
+% Skoða dreifingu flæðisgilda fyrir PGI hvarfið í glýkólýsu
+% Sjá líka plotSampleHist í COBRA
+nbins=25;
+hist(s.points(findRxnIDs(model,'d4d'),:), nbins) % Sjáum að hvarfið gengur í báðar áttir, meiri líkur á að það gangi til hægri
+
+% Ákvarða fylgnistuðla
+R=corrcoef(s.points');
+nbest=20;
+idxTarget=findRxnIDs(model,targetRxn);
+[~,idx]=sort(abs(R(idxTarget,:)),'descend'); % Ignore directionality, focus on magnitude
+for i=1:nbest
+    fprintf('%s\t%1.2f\t(%s)\n', model.rxns{idx(i)}, R(idxTarget,idx(i)), model.subSystems{idx(i)})
+end
