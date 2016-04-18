@@ -135,7 +135,7 @@ for i = 1:length(oleateS)
     end
 end
 oleateRxns = model.rxns(oleateRxnIs);
-
+disp(oleateRxns);
 %% BOTTLENECK CHECKS
 
 % Add EX for oleic acid
