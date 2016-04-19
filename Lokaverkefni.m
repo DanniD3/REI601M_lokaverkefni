@@ -124,7 +124,7 @@ oleateKEGG = 'C00712';
 succKEGG = 'C00042';
 hKEGG = 'C00001';
 %dhaKEGG = 'C06429';
-model = probPathwayConstruction(oleateKEGG, model, KEGGDB);
+model = probPathwayConstruction(succKEGG, model, KEGGDB);
 
 %% Finding oleate producing reactions
 oleateS = model.S(strmatch(oleate, model.mets),:);

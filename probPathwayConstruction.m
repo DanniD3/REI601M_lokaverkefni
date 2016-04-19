@@ -5,7 +5,8 @@ function model = probPathwayConstruction( targetMet, model, KEGGDB )
     
     model = addReaction(model,strcat('EX_',targetMet),targetMet);
     model = changeObjective(model,strcat('EX_',targetMet));
-    orgModel = model;
+    orgModel = model; % store original model for comparison
+    tmpModel = model; % store the model with the best current pathway
     
     native = 0; % check if targetMet is native
     if ~isempty(strmatch(targetMet,model.mets))
@@ -13,10 +14,20 @@ function model = probPathwayConstruction( targetMet, model, KEGGDB )
         native = sol.f;
     end
     
-    model = constructPath(targetMet, model, KEGGDB, 0);
-    sol = optimizeCbModel(model);
-    disp(strcat('Native :', num2str(native), ' Pathway :', num2str(sol.f)));
+    % chain limit can be set in the first line in function contructPath
+    maxTimeInSec = 10;
     
+    tic;
+    while toc < maxTimeInSec
+        model = constructPath(targetMet, model, KEGGDB, 0);
+        sol = optimizeCbModel(model);
+        if sol.f <= native
+            model = tmpModel; % return to current best if current is bad
+        else
+            tmpModel = model; % store current as current best if is better
+        end
+    end
+    disp(strcat('Native :', num2str(native), ' Pathway :', num2str(sol.f)));
     if sol.f <= native
         model = orgModel;
         disp('Original model is better');
