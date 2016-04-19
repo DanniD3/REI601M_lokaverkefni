@@ -67,7 +67,7 @@ sol = optimizeCbModel(model,'max');
 disp(sol);
 
 %% Robustness Analysis
-bioRxn = 'r_2111';
+bioRxn = 'r_2111'; % growth
 model = changeObjective(model,bioRxn);
 robustnessAnalysis(model,'EX_dha');
 
