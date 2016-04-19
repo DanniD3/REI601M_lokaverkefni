@@ -136,6 +136,19 @@ for i = 1:length(oleateS)
 end
 oleateRxns = model.rxns(oleateRxnIs);
 disp(oleateRxns);
+
+%% Find bottleneck formula
+%bn = 'r_1277'; % bn f. dha
+bn = 'r_2189'; % bn f. oleate
+bnFormula = model.S(:,strmatch(bn,model.rxns));
+bnMets = [];
+for i = 1:length(bnFormula)
+    if bnFormula(i) ~= 0
+       bnMets = [bnMets; [model.mets(i) bnFormula(i) model.metNames(i)]] ;
+    end
+end
+disp(bnMets);
+
 %% BOTTLENECK CHECKS
 
 % Add EX for oleic acid
